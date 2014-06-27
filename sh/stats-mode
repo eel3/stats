@@ -1,0 +1,47 @@
+#!/bin/sh
+# @(#) Find mode values from text like seq(1). Version 1.0.0.20131021
+
+PATH=/bin:/usr/bin:/usr/local/bin
+
+readonly progname=`basename "$0"`
+
+# do_exit <status>
+do_exit() {
+    rm -f "$tmpfile"
+    exit $1
+}
+
+# usage <status>
+usage() {
+    echo "usage: $progname [-h] [file ...]" 1>&2
+    exit $1
+}
+
+opt=
+while getopts 'h' opt; do
+    case $opt in
+    h)      usage 0 ;;
+    \?)     usage 1 ;;
+    esac
+done
+shift `expr $OPTIND - 1`
+
+trap 'rm -f "$tmpfile"; exit 1' 1 2 15
+
+tmpfile=`mktemp "$progname.$$.XXXXXXXXXX"`
+if [ $? -ne 0 ]; then
+    echo "$progname: cannot create temporary file" 1>&2
+    exit 1
+fi
+
+sort -n ${@+"$@"} |
+uniq -c |
+sort -k 1 -n -r |
+sed 's/^[ \t]*//' >"$tmpfile"
+
+freq=`head -1 "$tmpfile" | tr ' ' '\t' | cut -f 1`
+sed -n "
+/^$freq/p
+/^$freq/!q" "$tmpfile" | sort -k 2 -n
+
+rm -f "$tmpfile"

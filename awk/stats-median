@@ -1,0 +1,30 @@
+#!/bin/sh
+# @(#) Find a median value from text like seq(1). Version 1.0.0.20131021
+
+PATH=/bin:/usr/bin:/usr/local/bin
+
+# usage <status>
+usage() {
+    echo "usage: `basename "$0"` [-h] [file ...]" 1>&2
+    exit $1
+}
+
+opt=
+while getopts 'h' opt; do
+    case $opt in
+    h)      usage 0 ;;
+    \?)     usage 1 ;;
+    esac
+done
+shift `expr $OPTIND - 1`
+
+exec sort -n ${@+"$@"} | awk '
+{
+    samples[NR] = $1
+}
+END {
+    if (NR >= 1) {
+        mid = int(NR / 2)
+        print (NR%2 == 1) ? samples[mid+1] : (samples[mid] + samples[mid+1]) / 2
+    }
+}' ${@+"$@"}
