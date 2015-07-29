@@ -7,7 +7,7 @@ License
 -------
 
 | File                      | License      |
-|:--------------------------|:------------:|
+|:--------------------------|:-------------|
 | Files in ./ruby directory | zlib License |
 | Files in other directory  | NYSL         |
 
