@@ -14,7 +14,7 @@ License
 Target environments
 -------------------
 
-Cygwin, Linux, Mac OS X.
+Cygwin, Linux, macOS.
 
 All scripts are written in AWK, Bourne Shell, Ruby.
 So probably they work fine on other Unix-like environment.
