@@ -1,9 +1,34 @@
 #!/bin/sh
-# @(#) Find a median value from text like seq(1). Version 1.0.0.20131021
+# -*- coding: utf-8-unix -*-
+# vim:fileencoding=utf-8:ff=unix
+# @(#) Find a median value from text like seq(1).
 
-PATH=/bin:/usr/bin:/usr/local/bin
+set -u
+umask 0022
+IFS=$(printf ' \t\n_'); IFS=${IFS%_}
+PATH=/bin:/usr/bin
+export IFS LC_ALL=C LANG=C PATH
 
-readonly progname=`basename "$0"`
+readonly progname=${0##*/}
+readonly version=1.1.0.20190405
+
+# usage <exit-code>
+usage() {
+    echo "usage: $progname [-hv] [file ...]" 1>&2
+    exit $1
+}
+
+# version (no parameter)
+version() {
+    echo "$progname $version" 1>&2
+    exit 0
+}
+
+# error <message>
+error() {
+    echo "$progname:" ${@+"$@"} 1>&2
+    exit 1
+}
 
 # do_exit <status>
 do_exit() {
@@ -11,37 +36,31 @@ do_exit() {
     exit $1
 }
 
-# usage <status>
-usage() {
-    echo "usage: $progname [-h] [file ...]" 1>&2
-    exit $1
-}
+# main routine
 
 opt=
-while getopts 'h' opt; do
+while getopts 'hv' opt; do
     case $opt in
     h)      usage 0 ;;
+    v)      version ;;
     \?)     usage 1 ;;
     esac
 done
-shift `expr $OPTIND - 1`
+shift $(($OPTIND - 1))
 
 trap 'rm -f "$tmpfile"; exit 1' 1 2 15
 
-tmpfile=`mktemp "$progname.$$.XXXXXXXXXX"`
-if [ $? -ne 0 ]; then
-    echo "$progname: cannot create temporary file" 1>&2
-    exit 1
-fi
+tmpfile=$(mktemp "$progname.$$.XXXXXXXXXX")
+[ $? -eq 0 ] || error 'cannot create temporary file'
 
-nsamples=`sort -n ${@+"$@"} | tee "$tmpfile" | wc -l`
+nsamples=$(sort -n ${@+"$@"} | tee "$tmpfile" | wc -l)
 [ "$nsamples" -gt 0 ] || do_exit 0
 
-mid=`expr $nsamples / 2`
-if [ `expr $nsamples % 2` = 1 ]; then
-    sed -n "`expr $mid + 1`p" "$tmpfile"
+mid=$(($nsamples / 2))
+if [ $(($nsamples % 2)) = 1 ]; then
+    sed -n "$(($mid + 1))p" "$tmpfile"
 else
-    sed -n "$mid,`expr $mid + 1`p" "$tmpfile" |
+    sed -n "$mid,$(($mid + 1))p" "$tmpfile" |
     paste -d '+' -s |
     sed 's%^.*$%scale = 16; (&) / 2%' |
     bc -q -s

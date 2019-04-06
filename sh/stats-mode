@@ -1,9 +1,34 @@
 #!/bin/sh
-# @(#) Find mode values from text like seq(1). Version 1.0.0.20131021
+# -*- coding: utf-8-unix -*-
+# vim:fileencoding=utf-8:ff=unix
+# @(#) Find mode values from text like seq(1).
 
-PATH=/bin:/usr/bin:/usr/local/bin
+set -u
+umask 0022
+IFS=$(printf ' \t\n_'); IFS=${IFS%_}
+PATH=/bin:/usr/bin
+export IFS LC_ALL=C LANG=C PATH
 
-readonly progname=`basename "$0"`
+readonly progname=${0##*/}
+readonly version=1.1.0.20190405
+
+# usage <exit-code>
+usage() {
+    echo "usage: $progname [-hv] [file ...]" 1>&2
+    exit $1
+}
+
+# version (no parameter)
+version() {
+    echo "$progname $version" 1>&2
+    exit 0
+}
+
+# error <message>
+error() {
+    echo "$progname:" ${@+"$@"} 1>&2
+    exit 1
+}
 
 # do_exit <status>
 do_exit() {
@@ -11,35 +36,29 @@ do_exit() {
     exit $1
 }
 
-# usage <status>
-usage() {
-    echo "usage: $progname [-h] [file ...]" 1>&2
-    exit $1
-}
+# main routine
 
 opt=
-while getopts 'h' opt; do
+while getopts 'hv' opt; do
     case $opt in
     h)      usage 0 ;;
+    v)      version ;;
     \?)     usage 1 ;;
     esac
 done
-shift `expr $OPTIND - 1`
+shift $(($OPTIND - 1))
 
 trap 'rm -f "$tmpfile"; exit 1' 1 2 15
 
-tmpfile=`mktemp "$progname.$$.XXXXXXXXXX"`
-if [ $? -ne 0 ]; then
-    echo "$progname: cannot create temporary file" 1>&2
-    exit 1
-fi
+tmpfile=$(mktemp "$progname.$$.XXXXXXXXXX")
+[ $? -eq 0 ] || error 'cannot create temporary file'
 
 sort -n ${@+"$@"} |
 uniq -c |
 sort -k 1 -n -r |
 sed 's/^[ \t]*//' >"$tmpfile"
 
-freq=`head -1 "$tmpfile" | tr ' ' '\t' | cut -f 1`
+freq=$(head -1 "$tmpfile" | tr ' ' '\t' | cut -f 1)
 sed -n "
 /^$freq/p
 /^$freq/!q" "$tmpfile" | sort -k 2 -n
