@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
-# vim:fileencoding=UTF-8
+# encoding: utf-8
+# -*- coding: utf-8-unix -*-
+# vim:fileencoding=utf-8:ff=unix
 # @(#) Generate a frequency table from text like seq(1)
 
 # Copyright (c) 2014 eel3
