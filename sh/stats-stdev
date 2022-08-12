@@ -9,13 +9,13 @@ IFS=$(printf ' \t\n_'); IFS=${IFS%_}
 PATH=/bin:/usr/bin
 export IFS LC_ALL=C LANG=C PATH
 
-readonly progname=${0##*/}
-readonly version=1.1.0.20190405
+readonly progname="${0##*/}"
+readonly version=1.1.1.20220710
 
 # usage <exit-code>
 usage() {
     echo "usage: $progname [-hv] [file ...]" 1>&2
-    exit $1
+    exit "$1"
 }
 
 # version (no parameter)
@@ -33,7 +33,7 @@ error() {
 # do_exit <status>
 do_exit() {
     rm -f "$tmpfile"
-    exit $1
+    exit "$1"
 }
 
 # main routine
@@ -46,12 +46,11 @@ while getopts 'hv' opt; do
     \?)     usage 1 ;;
     esac
 done
-shift $(($OPTIND - 1))
+shift $((OPTIND - 1))
 
 trap 'rm -f "$tmpfile"; exit 1' 1 2 15
 
-tmpfile=$(mktemp "$progname.$$.XXXXXXXXXX")
-[ $? -eq 0 ] || error 'cannot create temporary file'
+tmpfile=$(mktemp "$progname.$$.XXXXXXXXXX") || error 'cannot create temporary file'
 
 cat ${@+"$@"} >"$tmpfile"
 {
@@ -70,6 +69,6 @@ t = 0
 s/^.*$/t += (& - m) ^ 2/
 $a\
 sqrt(t / n)' "$tmpfile"
-} | bc -q -s | tail -1
+} | bc -q -s | tail -n 1
 
 rm -f "$tmpfile"
